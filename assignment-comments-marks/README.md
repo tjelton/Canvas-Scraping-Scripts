@@ -4,9 +4,7 @@ Fetches all student grades and submission comments for a given Canvas course and
 
 ## Output
 
-A CSV file with one row per comment (or one row per student if they have no comments).
-
-Columns vary slightly depending on `--id-type` (see [Student ID](#student-id)):
+By default, the output has **one row per submission comment** (or one row per student if they have no comments):
 
 | Column | Description |
 |---|---|
@@ -20,6 +18,8 @@ Columns vary slightly depending on `--id-type` (see [Student ID](#student-id)):
 | `comment_author_name` | Display name of the comment author |
 | `comment_created_at` | ISO timestamp of when the comment was posted |
 | `comment_body` | Text content of the comment |
+
+With `--collapse-comments`, the output instead has **one row per student** with a single combined `comments` field — see [Collapsing Comments](#collapsing-comments).
 
 ## Setup
 
@@ -37,8 +37,6 @@ pip install requests
 | `CANVAS_BASE_URL` | Base URL of your Canvas instance | `https://your-institution.instructure.com` |
 
 To generate an API token: Canvas > Account > Settings > New Access Token.
-
-Set them in your shell:
 
 ```bash
 export CANVAS_API_TOKEN="your_token_here"
@@ -62,6 +60,40 @@ This saves output to `comments_marks_12345_67890.csv` in the current directory.
 
 ```bash
 python fetch_comments_marks.py --course-id 12345 --assignment-id 67890 --output my_data.csv
+```
+
+## Collapsing Comments
+
+Some markers leave feedback in the rubric criterion boxes rather than (or in addition to) the overall submission comment box. Use `--collapse-comments` to combine both sources into a single formatted `comments` field, with one row per student.
+
+```bash
+python fetch_comments_marks.py --course-id 12345 --assignment-id 67890 --collapse-comments
+```
+
+The `comments` field is formatted as:
+
+```
+<Criterion Name (Markers Comment)>:
+<comment text>
+
+<Final Comment>:
+<comment text>
+```
+
+Rules:
+- Rubric criteria with no comment are omitted.
+- `Final Comment` is omitted if the marker left no overall submission comment.
+- If the assignment has no rubric, only `Final Comment` appears (if present).
+- If there are multiple submission comments, they are joined in chronological order.
+
+**Example** — assignment with rubric criteria "Working" and "Presentation", where only "Presentation" has a comment:
+
+```
+<Presentation (Markers Comment)>:
+The slides were clear and well-structured.
+
+<Final Comment>:
+Good effort overall. See rubric for specific feedback.
 ```
 
 ## Student ID
@@ -92,6 +124,6 @@ python fetch_comments_marks.py --course-id 12345 --assignment-id 67890 --id-type
 ## Notes
 
 - Results are paginated automatically — all pages are fetched regardless of class size.
-- Students with no comments will still appear in the output with `null` comment fields.
+- Students with no comments will still appear in the output.
 - Only submission-level comments are included (not draft/provisional comments).
-- You must have at least a Teacher or TA role in the course to access grade and comment data.
+- You must have at least a Teacher or TA role in the course to access grade, rubric, and comment data.
