@@ -23,3 +23,7 @@ export CANVAS_BASE_URL="https://your-institution.instructure.com"
 | Script | Description |
 |---|---|
 | [Assignment Comments and Marks](assignment-comments-marks/README.md) | Fetch student grades and submission comments for a given course and assignment (no submission content) |
+
+## Notes
+
+- For people at the University of Sydney: export CANVAS_BASE_URL="https://canvas.sydney.edu.au"
